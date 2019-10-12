@@ -1,0 +1,70 @@
+server:
+  port: 9095
+spring:
+  application:
+    name: dp-kafka-hdfs
+  datasource:
+    url: jdbc:mysql://10.1.24.191:3306/hive?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&failOverReadOnly=false&useSSL=false&serverTimezone=UTC&allowMultiQueries=true
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.jdbc.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 15
+      auto-commit: true
+      idle-timeout: 30000
+      pool-name: ${spring.application.name}-HikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+  redis:
+    database: 0
+    host: 10.1.24.191
+    port: 6379
+    jedis:
+      pool:
+        max-active: 8
+        max-wait: -1ms
+        max-idle: 8
+        min-idle: 0
+    password: 123456
+
+  mvc:
+    servlet:
+      path: /
+  resources:
+    static-locations: classpath:/public,classpath:/static
+  main:
+    allow-bean-definition-overriding: true
+  task:
+    execution:
+      pool:
+        core-size: 2
+        max-size: 4
+    scheduling:
+      pool:
+        size: 2
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://10.1.24.192:9090/eureka/
+    registry-fetch-interval-seconds: 5
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  config-location: classpath:mybatis-config.xml
+
+logging:
+  level:
+    com.gzkj.kafka.dao: debug
+#远程linux ssh连接信息
+ssh:
+  ip: 10.1.24.191
+  port: 22
+  userName: root
+  userPwd: eureka,123
