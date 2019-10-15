@@ -4,8 +4,13 @@ import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import java.sql.SQLOutput;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 用户获取配置文件中属性值 不依赖于spring
@@ -40,7 +45,7 @@ public class YmlUtils {
             System.out.println(yml + " not found!");
             return null;
         }
-        return properties.getProperty(key,null);
+        return properties.getProperty(key, null);
     }
 
     /**
@@ -61,8 +66,16 @@ public class YmlUtils {
     }
 
     public static void main(String[] args) {
-        System.out.println(Integer.parseInt(YmlUtils.getYml("centos")));
+        test();
     }
+
+    private static void test() {
+        Integer i=null;
+        Optional<Integer> i1 = Optional.ofNullable(i);
+        Integer maxId = i1.orElse(1);
+        System.out.println(maxId);
+    }
+
 }
 
 
