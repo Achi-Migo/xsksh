@@ -4,10 +4,11 @@ spring:
   application:
     name: xsksh
   datasource:
-    url: jdbc:mysql://192.168.1.10:3306/hive?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&failOverReadOnly=false&useSSL=false&serverTimezone=UTC&allowMultiQueries=true
+#    url: jdbc:mysql://192.168.1.193:3306/screen_api?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&failOverReadOnly=false&useSSL=false&serverTimezone=UTC&allowMultiQueries=true
+    url: jdbc:mysql://localhost:3306/screen_api?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&failOverReadOnly=false&useSSL=false&serverTimezone=UTC&allowMultiQueries=true
     username: root
-    password: Gz123456@
-#    password: 123456
+#    password: Gz123456@
+    password: 123456
     driver-class-name: com.mysql.jdbc.Driver
     hikari:
       minimum-idle: 5
@@ -19,17 +20,17 @@ spring:
       connection-timeout: 30000
       connection-test-query: SELECT 1
 
-  redis:
-    database: 0
-    host: 192.168.1.193
-    port: 6379
-    password: 123456
-    jedis:
-      pool:
-        max-active: 8
-        max-wait: -1ms
-        max-idle: 8
-        min-idle: 0
+#  redis:
+#    database: 0
+#    host: 192.168.1.193
+#    port: 6379
+#    password: 123456
+#    jedis:
+#      pool:
+#        max-active: 8
+#        max-wait: -1ms
+#        max-idle: 8
+#        min-idle: 0
 
   mvc:
     servlet:

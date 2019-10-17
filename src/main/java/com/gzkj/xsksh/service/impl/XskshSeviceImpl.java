@@ -1,11 +1,24 @@
 package com.gzkj.xsksh.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.fcibook.quick.http.QuickHttp;
+import com.gzkj.xsksh.common.util.EncodeUtils;
+import com.gzkj.xsksh.common.util.JFileUtils;
+import com.gzkj.xsksh.dao.ApiDataDao;
+import com.gzkj.xsksh.entity.ApiData;
 import com.gzkj.xsksh.service.XskshSevice;
 import com.gzkj.xsksh.vo.ResultVo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 
 /**
@@ -19,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class XskshSeviceImpl implements XskshSevice {
+
     @Override
     public Object get(String orgId, String dateTime) {
         Object data = JSON.parse("{\n" +
@@ -34,4 +48,6 @@ public class XskshSeviceImpl implements XskshSevice {
                 "}");
         return ResultVo.sucessResultVo(data);
     }
+
+
 }
