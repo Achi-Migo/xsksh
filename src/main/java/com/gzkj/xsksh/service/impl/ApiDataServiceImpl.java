@@ -4,21 +4,18 @@ import com.fcibook.quick.http.QuickHttp;
 import com.gzkj.xsksh.common.util.EncodeUtils;
 import com.gzkj.xsksh.common.util.JFileUtils;
 import com.gzkj.xsksh.entity.ApiData;
-import com.gzkj.xsksh.dao.ApiDataDao;
+import com.gzkj.xsksh.entity.MapData;
 import com.gzkj.xsksh.service.ApiDataService;
 import com.gzkj.xsksh.vo.ResultVo;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import com.github.pagehelper.PageInfo;
-import com.github.pagehelper.PageHelper;
 
 /**
  * (ApiData)表服务实现类
@@ -29,20 +26,26 @@ import com.github.pagehelper.PageHelper;
 @Transactional
 @Service
 public class ApiDataServiceImpl implements ApiDataService {
-    @Resource
-    private ApiDataDao apiDataDao;
+
     //        String[] removeKeys= new String[]{"t","resolution","detect","appname"};
-    String[] removeKeys = new String[]{};
+    String[] removeKeys = new String[]{"callback"};
+    public static HashMap<MapData, String> mapdat = (HashMap<MapData, String>) JFileUtils.readObjectFromFile();
 
     @Override
     public Object blob() {
         int insert = 0;
         byte[] bytes = new byte[1024];
+        String content = "";
         String path = this.getClass().getResource("/static").getPath();
         List<String> strings = null;
+        LinkedHashMap data = new LinkedHashMap();
+        LinkedList<HashMap<MapData, String>> maps = new LinkedList<>();
+        HashMap<MapData, String> cell = new HashMap<>();
         try {
-            strings = JFileUtils.readLines(new File(path + "/url.txt"), "utf-8");
-        } catch (IOException e) {
+//            strings = JFileUtils.readLines(new File(path + "/url.txt"), "utf-8");
+            //http://webapi.amap.com/maps/modules?v=1.4.15&key=5536efb3bbadfd5b439a7f888327b8f6&m=AMap.CustomLayer,AMap.IndoorMap&vrs=1572597093513&mode=1
+            strings = new ArrayList<>(Arrays.asList(new String[]{"http://webapi.amap.com/maps/modules?v=1.4.15&key=5536efb3bbadfd5b439a7f888327b8f6&m=cvector,AMap.IndoorMap,AMap.IndoorMap3D&vrs=1572597093513&mode=1","http://vdata.amap.com/style?v=1.4.15&key=5536efb3bbadfd5b439a7f888327b8f6&mapstyle=normal","http://vdata.amap.com/tiles?mapType=normal&v=3&style=5&rd=2&flds=region,road&t=8,214,96;8,218,96;8,213,97;8,200,111;8,212,99&lv=8&key=5536efb3bbadfd5b439a7f888327b8f6&preload=0", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=三山区&callback=E4B889E5B1B1E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=东至县&callback=E4B89CE887B3E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=临泉县&callback=E4B8B4E6B389E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=义安区&callback=E4B989E5AE89E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=五河县&callback=E4BA94E6B2B3E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=亳州市&callback=E4BAB3E5B79EE5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=休宁县&callback=E4BC91E5AE81E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=全椒县&callback=E585A8E6A492E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=八公山区&callback=E585ABE585ACE5B1B1E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=六安市&callback=E585ADE5AE89E5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=凤台县&callback=E587A4E58FB0E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=凤阳县&callback=E587A4E998B3E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=利辛县&callback=E588A9E8BE9BE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=包河区&callback=E58C85E6B2B3E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=南谯区&callback=E58D97E8B0AFE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=南陵县&callback=E58D97E999B5E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=博望区&callback=E58D9AE69C9BE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=叶集区&callback=E58FB6E99B86E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=合肥市&callback=E59088E882A5E5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=含山县&callback=E590ABE5B1B1E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=和县&callback=E5928CE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=固镇县&callback=E59BBAE99587E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=埇桥区&callback=E59F87E6A1A5E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=大观区&callback=E5A4A7E8A782E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=大通区&callback=E5A4A7E9809AE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=天长市&callback=E5A4A9E995BFE5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=太和县&callback=E5A4AAE5928CE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=太湖县&callback=E5A4AAE6B996E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=宁国市&callback=E5AE81E59BBDE5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=安庆市&callback=E5AE89E5BA86E5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=定远县&callback=E5AE9AE8BF9CE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=宜秀区&callback=E5AE9CE7A780E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=宣城市&callback=E5AEA3E59F8EE5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=宣州区&callback=E5AEA3E5B79EE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=宿州市&callback=E5AEBFE5B79EE5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=宿松县&callback=E5AEBFE69DBEE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=寿县&callback=E5AFBFE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=屯溪区&callback=E5B1AFE6BAAAE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=岳西县&callback=E5B2B3E8A5BFE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=巢湖市&callback=E5B7A2E6B996E5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=广德市&callback=E5B9BFE5BEB7E5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=庐江县&callback=E5BA90E6B19FE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=庐阳区&callback=E5BA90E998B3E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=当涂县&callback=E5BD93E6B682E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=徽州区&callback=E5BEBDE5B79EE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=怀宁县&callback=E68080E5AE81E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=怀远县&callback=E68080E8BF9CE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=戈江区&callback=E68888E6B19FE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=旌德县&callback=E6978CE5BEB7E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=无为县&callback=E697A0E4B8BAE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=明光市&callback=E6988EE58589E5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=望江县&callback=E69C9BE6B19FE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=杜集区&callback=E69D9CE99B86E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=来安县&callback=E69DA5E5AE89E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=枞阳县&callback=E69E9EE998B3E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=桐城市&callback=E6A190E59F8EE5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=歙县&callback=E6AD99E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=池州市&callback=E6B1A0E5B79EE5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=泗县&callback=E6B397E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=泾县&callback=E6B3BEE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=涡阳县&callback=E6B6A1E998B3E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=淮上区&callback=E6B7AEE4B88AE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=淮北市&callback=E6B7AEE58C97E5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=淮南市&callback=E6B7AEE58D97E5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=滁州市&callback=E6BB81E5B79EE5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=潘集区&callback=E6BD98E99B86E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=潜山市&callback=E6BD9CE5B1B1E5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=濉溪县&callback=E6BF89E6BAAAE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=灵璧县&callback=E781B5E792A7E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=烈山区&callback=E78388E5B1B1E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=琅琊区&callback=E79085E7908AE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=瑶海区&callback=E791B6E6B5B7E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=田家庵区&callback=E794B0E5AEB6E5BAB5E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=界首市&callback=E7958CE9A696E5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=相山区&callback=E79BB8E5B1B1E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=石台县&callback=E79FB3E58FB0E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=砀山县&callback=E7A080E5B1B1E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=祁门县&callback=E7A581E997A8E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=禹会区&callback=E7A6B9E4BC9AE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=繁昌县&callback=E7B981E6988CE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=绩溪县&callback=E7BBA9E6BAAAE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=肥东县&callback=E882A5E4B89CE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=肥西县&callback=E882A5E8A5BFE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=舒城县&callback=E88892E59F8EE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=芜湖县&callback=E88A9CE6B996E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=芜湖市&callback=E88A9CE6B996E5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=花山区&callback=E88AB1E5B1B1E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=萧县&callback=E890A7E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=蒙城县&callback=E89299E59F8EE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=蕉城区&callback=E89589E59F8EE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=蚌埠市&callback=E89A8CE59FA0E5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=蚌山区&callback=E89A8CE5B1B1E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=蜀山区&callback=E89C80E5B1B1E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=裕安区&callback=E8A395E5AE89E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=谢家集区&callback=E8B0A2E5AEB6E99B86E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=谯城区&callback=E8B0AFE59F8EE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=贵池区&callback=E8B4B5E6B1A0E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=迎江区&callback=E8BF8EE6B19FE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=郊区&callback=E9838AE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=郎溪县&callback=E9838EE6BAAAE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=金安区&callback=E98791E5AE89E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=金寨县&callback=E98791E5AFA8E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=铜官区&callback=E9939CE5AE98E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=铜陵市&callback=E9939CE999B5E5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=镜湖区&callback=E9959CE6B996E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=长丰县&callback=E995BFE4B8B0E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=阜南县&callback=E9989CE58D97E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=阜阳市&callback=E9989CE998B3E5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=雨山区&callback=E99BA8E5B1B1E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=霍山县&callback=E99C8DE5B1B1E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=霍邱县&callback=E99C8DE982B1E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=青阳县&callback=E99D92E998B3E58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=颍上县&callback=E9A28DE4B88AE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=颍东区&callback=E9A28DE4B89CE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=颍州区&callback=E9A28DE5B79EE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=颍泉区&callback=E9A28DE6B389E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=马鞍山市&callback=E9A9ACE99E8DE5B1B1E5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=鸠江区&callback=E9B8A0E6B19FE58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=黄山区&callback=E9BB84E5B1B1E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=黄山市&callback=E9BB84E5B1B1E5B882_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=黟县&callback=E9BB9FE58EBF_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=龙子湖区&callback=E9BE99E5AD90E6B996E58CBA_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=A0F73573-47EC-412A-BE8C-8BD0EBCCDE9C&sdkversion=1.4.15", "http://vdata.amap.com/tiles?mapType=normal&v=3&style=5&rd=2&flds=roadlabel,poilabel&t=7,100,57;7,100,56;7,99,57;7,101,57;7,100,58;7,99,56;7,101,56;7,99,58;7,101,58;7,100,55&lv=7&key=5536efb3bbadfd5b439a7f888327b8f6&preload=0", "http://vdata.amap.com/tiles?mapType=normal&v=3&style=5&rd=2&flds=roadlabel,poilabel&t=7,98,57;7,99,55;7,101,55;7,98,56;7,98,58;7,97,56&lv=7&key=5536efb3bbadfd5b439a7f888327b8f6&preload=0", "http://vdata.amap.com/tiles?mapType=normal&v=3&style=5&rd=2&flds=region,road&t=8,216,99;8,216,98&lv=8&key=5536efb3bbadfd5b439a7f888327b8f6&preload=0", "http://vdata.amap.com/tiles?mapType=normal&v=3&style=5&rd=2&flds=region,road&t=8,214,99;8,218,99;8,216,101;8,215,97;8,217,97;8,214,98;8,218,98;8,214,100;8,218,100;8,215,101&lv=8&key=5536efb3bbadfd5b439a7f888327b8f6&preload=0", "http://vdata.amap.com/tiles?mapType=normal&v=3&style=5&rd=2&flds=region,road&t=8,217,101;8,214,97;8,218,97;8,214,101;8,216,96;8,213,99;8,215,96;8,217,96;8,213,98;8,213,100&lv=8&key=5536efb3bbadfd5b439a7f888327b8f6&preload=0", "http://vdata.amap.com/tiles?mapType=normal&v=3&style=5&rd=2&flds=region,road&t=8,214,96;8,218,96;8,213,97;8,200,111;8,212,99;8,199,111;8,201,111;8,212,98;8,213,96;8,202,111&lv=8&key=5536efb3bbadfd5b439a7f888327b8f6&preload=0", "http://vdata.amap.com/tiles?mapType=normal&v=3&style=5&rd=2&flds=region,road&t=8,212,97;8,212,96;8,211,97&lv=8&key=5536efb3bbadfd5b439a7f888327b8f6&preload=0", "https://webapi.amap.com/maps?v=1.4.15&key=5536efb3bbadfd5b439a7f888327b8f6&plugin=Map3D,AMap.DistrictSearch,AMap.DistrictLayer,AMap.ControlBar", "http://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=安徽省&callback=E5AE89E5BEBDE79C81_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=06B8E2B3-320B-485A-8F8E-C4BDF677D8B5&sdkversion=1.4.15", "http://webapi.amap.com/maps/cookie?key=amap_ver&value=1572597093513&callback=cookie_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=C846ED24-B37D-4449-BD12-D1DBDE3064A1&sdkversion=1.4.15", "http://restapi.amap.com/v3/log/init?s=rsv3&product=JsInit&key=5536efb3bbadfd5b439a7f888327b8f6&t=1572849514116&resolution=686*956&mob=0&vt=1&dpr=1.600000023841858&scale=1.600000023841858&detect=true&callback=init_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=D2FB086F-548A-46F8-B368-536C5C4BBA7E&sdkversion=1.4.15", "http://webapi.amap.com/v4/map/styles?styleid=9d5868cc54b23a12f1c0066866bef531&s=rsv3&key=5536efb3bbadfd5b439a7f888327b8f6&callback=styles_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=433B8931-8B20-41B9-AC62-F4589347D145&sdkversion=1.4.15", "http://webapi.amap.com/count?type=nfl&k=5536efb3bbadfd5b439a7f888327b8f6&m=0&pf=mac&v=1.4.15&branch=JSAPI&log=Map~,mapStyle,pitch,center,zoom,viewMode@3D,rotation,getZoom,getCenter,lnglatToPixel,lngLatToContainer,p20ToContainer,getBounds,setLimitBounds,add,setZoomAndCenter!CustomLayer~,setMap,hide,show!DistrictSearch~,subdistrict,extensions,level,search!Polyline~,path,strokeColor,strokeWeight,map!Object3DLayer~,zIndex,add!Object3D.Wall~,path,height,color!Polygon~,path,strokeColor,strokeWeight,map,fillOpacity,fillColor!Text~,text,anchor,draggable,cursor,style,position,setStyle!Icon~,size,image!Marker~,icon,position,hide&callback=count_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=3AD9DCB4-76D8-49C8-869C-4F5914F4B282&sdkversion=1.4.15", "http://webapi.amap.com/count?type=q&resolution=928*720&k=5536efb3bbadfd5b439a7f888327b8f6&u=http%253A%252F%252Flocalhost%253A3000%252F&iw=1&cw=1&gc=Intel%20Iris%20Pro%20OpenGL%20Engine&m=0&cv=1&pf=mac&dpr=1.600000023841858&screenwidth=1440&scale=1.600000023841858&detect=1&v=1.4.15&rs=vw&viewmode=3D&fd=0&raster=0&rb=9624-9704-9704&ftc=43&rl=11251-12764-12773&rd=12774&rds=12774&jl=0&sd=180&callback=count_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=51FBACDC-5BA6-4C5A-A0A9-62CF5D10171D&sdkversion=1.4.15", "http://webapi.amap.com/count?type=nfl&k=5536efb3bbadfd5b439a7f888327b8f6&m=0&pf=mac&v=1.4.15&branch=JSAPI&log=Object3DLayer~getMap&callback=count_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=EBBF0EEE-71F5-477D-9801-1ED743EC135F&sdkversion=1.4.15", "http://webapi.amap.com/count?type=nfl&k=5536efb3bbadfd5b439a7f888327b8f6&m=0&pf=mac&v=1.4.15&branch=JSAPI&log=Object3DLayer~clear!Object3D.Prism~,path,height,color&callback=count_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=6DE055D3-8629-40AE-8038-A6CDA2C5AC84&sdkversion=1.4.15"}));
+        } catch (Exception e) {
             e.printStackTrace();
         }
         for (String s : strings) {
@@ -50,16 +53,20 @@ public class ApiDataServiceImpl implements ApiDataService {
 //                Thread.sleep(1000);
                 s = EncodeUtils.urlDecode(s);
                 System.out.println(s);
-                bytes = new QuickHttp()
-                        .url(s)
-                        .get()
-                        .bytes();
+//                bytes = new QuickHttp().url(s).get().bytes();
+                content = new QuickHttp()
+                        .url(s).get().text();
+                //将keywords type
+                MapData mapData = analysisUrl(s);
+                cell.put(mapData, content);
+//                cell.put(mapData, bytes);
+
             } catch (Exception e) {
                 e.printStackTrace();
                 bytes = null;
             }
 
-            for (String removeKey : removeKeys) {
+         /*   for (String removeKey : removeKeys) {
                 s = s.replaceAll("&" + removeKey + "=.*&", "&");
             }
             System.out.println(s);
@@ -67,20 +74,30 @@ public class ApiDataServiceImpl implements ApiDataService {
             int i = apiDataDao.queryByUrl(s);
             if (i == 0) {
                 insert += apiDataDao.insert(apiData);
-            }
+            }*/
         }
+        JFileUtils.writeObjectToFile(cell);
         return insert;
     }
 
-    @Override
+    /**
+     * 保存到数据库
+     *
+     * @param request
+     * @return
+     */
+  /*  @Override
     public Object mvt(HttpServletRequest request) {
         StringBuffer requestURL = request.getRequestURL();
         Map<String, String[]> parameterMap = request.getParameterMap();
+        String callback = request.getParameter("callback");
         final String[] param = {""};
         List<String> except = Arrays.asList(removeKeys);
         parameterMap.forEach((k, v) -> {
             if (!except.contains(k)) {
                 param[0] += k + "=" + v[0] + "&";
+            } else {
+                param[0] += "%25%26";
             }
         });
         String substring = "";
@@ -92,105 +109,58 @@ public class ApiDataServiceImpl implements ApiDataService {
         param[0] = EncodeUtils.urlDecode(param[0]);
         System.out.println(param[0]);
         ApiData apiData = apiDataDao.queryLikeUrl(param[0]);
-        return apiData != null ? apiData.getData() : "";
-    }
-
-    /**
-     * 新增数据
-     *
-     * @param apiData 实例对象
-     * @return 实例对象
-     */
+        byte[] data1 = apiData.getData();
+        String data = new String(data1);
+        data = data.replaceAll("(?<=callback=)[a-zA-Z0-9_]*(?=&)", callback);
+        System.out.println(data);
+        return data;
+    }*/
+//https://restapi.amap.com/v3/config/district?subdistrict=0&extensions=all&level=city&key=5536efb3bbadfd5b439a7f888327b8f6&s=rsv3&output=json&keywords=合肥市&callback=jsonp_68000000_&platform=JS&logversion=2.0&appname=gezi.com&csid=--4-8-&sdkversion=1.4.15
     @Override
-    public Object insert(ApiData apiData) throws Exception {
-        apiData.setId(UUID.randomUUID().toString().replaceAll("-", ""));
-        apiData.setIsDeleted(false);
-        Date now = new Date();
-        apiData.setCreateTime(now);
-        apiData.setUpdateTime(now);
-        if (apiDataDao.insert(apiData) > 0) {
-            return ResultVo.sucessResultVo("添加成功");
+    public Object mvt(HttpServletRequest request) {
+        StringBuffer requestURL = request.getRequestURL();
+        String urlPath = "/" + requestURL.toString().split("/xsksh/mvt/")[1];
+        String keywords = request.getParameter("keywords");
+        String type = request.getParameter("type");
+        String t = request.getParameter("t");
+        if (!urlPath.equals("/tiles1") || !urlPath.contains("/tiles1")) {
+            t = "";
         }
-        return ResultVo.errorResultVo("添加失败");
-    }
+        MapData mapData = new MapData(urlPath, keywords, type, t);
 
-    @Override
-    public Object insertBatchs(List<ApiData> apiData) throws Exception {
-        return null;
-    }
-
-    /**
-     * 通过主键删除数据
-     *
-     * @param id 主键
-     * @return 是否成功
-     */
-    @Override
-    public Object deleteById(String id) throws Exception {
-        if (apiDataDao.deleteById(id) > 0) {
-            return ResultVo.sucessResultVo("删除成功");
+//http://192.168.2.15:9095/xsksh/mvt/v3/log/init?s=rsv3&product=JsModule&key=5536efb3bbadfd5b439a7f888327b8f6&m=cvector,AMap.IndoorMap,AMap.IndoorMap3D&callback=jsonp_647256_&platform=JS&logversion=2.0&appname=http%3A%2F%2Flocalhost%3A3000%2F&csid=D074765F-22D5-4D8E-B76D-BE366302988E&sdkversion=1.4.15
+        String s = null;
+        for (MapData data : mapdat.keySet()) {
+            if (mapData.equals(data)) {
+                s = mapdat.get(data);
+            }
         }
-        return ResultVo.errorResultVo("删除失败");
+        System.out.println(s);
+        return s;
     }
 
-    /**
-     * 通过主键List删除数据
-     *
-     * @param idList 主键列表
-     * @return 是否成功
-     */
-    @Override
-    public Object delete(List<String> idList) throws Exception {
-        if (idList.size() > 0 && apiDataDao.delete(idList) > 0) {
-            return ResultVo.sucessResultVo("删除成功");
+
+
+    public MapData analysisUrl(String url) {
+        String[] split = url.split("\\?");
+        String urlPath = "/" + split[0].replaceAll("http[s]?://[a-zA-Z0-9-\\\\.]*/", "");
+        Matcher matcher = Pattern.compile("(?<=keywords=)[^&]*(?=&)").matcher(split[1]);
+        String keywords = "", type = "", t = "";
+        if (matcher.find()) {
+            keywords = matcher.group();
         }
-        return ResultVo.errorResultVo("删除失败");
-    }
-
-
-    /**
-     * 修改数据
-     *
-     * @param apiData 实例对象
-     * @return 实例对象
-     */
-    @Override
-    public Object update(ApiData apiData) throws Exception {
-        if (apiDataDao.update(apiData) > 0) {
-            return ResultVo.sucessResultVo("修改成功");
+        matcher = Pattern.compile("(?<=type=)[^&]*(?=&)").matcher(split[1]);
+        if (matcher.find()) {
+            type = matcher.group();
         }
-        return ResultVo.errorResultVo("未修改");
-    }
-
-    /**
-     * 通过ID查询单条数据
-     *
-     * @param id 主键
-     * @return 实例对象
-     */
-    @Override
-    public Object queryById(String id) throws Exception {
-        ApiData apiData = apiDataDao.queryById(id);
-        if (apiData != null) {
-            return ResultVo.sucessResultVo(apiData);
-        } else {
-            return ResultVo.sucessResultVo("ID为{}的数据不存在", id);
+        matcher = Pattern.compile("(?<=&t=)[^&]*(?=&)").matcher(split[1]);
+        if (matcher.find()) {
+            t = matcher.group();
         }
+        if (!urlPath.equals("/tiles1") || !urlPath.contains("/tiles1")) {
+            t = "";
+        }
+        MapData mapData = new MapData(urlPath, keywords, type, t);
+        return mapData;
     }
-
-    /**
-     * 查询多条数据
-     *
-     * @param pageNum  查询起始位置
-     * @param pageSize 查询条数
-     * @return 对象列表
-     */
-    @Override
-    public Object queryAllByPaging(int pageNum, int pageSize) throws Exception {
-        PageHelper.startPage(pageNum, pageSize);
-        List<ApiData> apiDataList = apiDataDao.queryAll();
-        PageInfo<ApiData> pageInfo = new PageInfo<>(apiDataList);
-        return ResultVo.sucessResultVo(pageInfo);
-    }
-
 }

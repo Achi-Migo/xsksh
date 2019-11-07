@@ -2,9 +2,11 @@ package com.gzkj.xsksh.common.util;
 
 import com.fcibook.quick.http.QuickHttp;
 import com.fcibook.quick.http.ResponseBody;
+import com.gzkj.xsksh.entity.MapData;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -24,7 +26,9 @@ public class DownloadApiData {
 //            e.printStackTrace();
 //        }
 //        testGet();
-        testDecode();
+//        testDecode();
+//        HashMap<MapData,String> map = (HashMap<MapData, String>) JFileUtils.readObjectFromFile();
+//        System.out.println(map);
     }
 
     private static void testDecode() {

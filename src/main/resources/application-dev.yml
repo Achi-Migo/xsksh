@@ -1,24 +1,9 @@
 server:
-  port: 9095
+  port: 17001
 spring:
   application:
     name: xsksh
-  datasource:
-#    url: jdbc:mysql://192.168.1.193:3306/screen_api?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&failOverReadOnly=false&useSSL=false&serverTimezone=UTC&allowMultiQueries=true
-    url: jdbc:mysql://localhost:3306/screen_api?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&failOverReadOnly=false&useSSL=false&serverTimezone=UTC&allowMultiQueries=true
-    username: root
-#    password: Gz123456@
-    password: 123456
-    driver-class-name: com.mysql.jdbc.Driver
-    hikari:
-      minimum-idle: 5
-      maximum-pool-size: 15
-      auto-commit: true
-      idle-timeout: 30000
-      pool-name: ${spring.application.name}-HikariCP
-      max-lifetime: 1800000
-      connection-timeout: 30000
-      connection-test-query: SELECT 1
+
 
 #  redis:
 #    database: 0
@@ -36,7 +21,7 @@ spring:
     servlet:
       path: /
   resources:
-    static-locations: classpath:/public,classpath:/static,file:D:/Debug
+    static-locations: classpath:/public,file:D:/Debug
 #  main:
 #    allow-bean-definition-overriding: true
 #  task:
@@ -66,11 +51,4 @@ spring:
 #  MaxAutoRetriesNextServer: 1
 #  OkToRetryOnAllOperations: false
 
-mybatis:
-  mapper-locations: classpath:mapper/*.xml
-#  config-location: classpath:mybatis-config.xml
-  configuration:
-    map-underscore-to-camel-case: true
-logging:
-  level:
-    com.gzkj.xsksh.dao: debug
+

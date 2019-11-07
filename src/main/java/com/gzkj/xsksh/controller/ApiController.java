@@ -1,7 +1,7 @@
 package com.gzkj.xsksh.controller;
 
 import com.gzkj.xsksh.service.ApiDataService;
-import com.gzkj.xsksh.service.XskshSevice;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
  * @createDate 2019/10/15 16:00
  * @see com.gzkj.xsksh.controller
  */
+@Api(tags = "大屏api接口")
 @RequestMapping("/xsksh")
 @RestController
 public class ApiController {

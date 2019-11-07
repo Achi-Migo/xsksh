@@ -1,3 +1,5 @@
 spring:
   profiles:
     active: dev
+#dat_path: /home/qyxs01/daping/map.dat
+dat_path: \static\map.dat
